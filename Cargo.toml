@@ -1,0 +1,21 @@
+[package]
+name = "efgrep"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-session = { version = "0.7.2", features = ["redis-actor-session"] }
+actix-web = { version = "4.3.1", features = ["rustls"] }
+chrono = "0.4.24"
+color-eyre = "0.6.2"
+futures-util = "0.3.27"
+oauth2 = "4.3.0"
+reqwest = "0.11.15"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = "1.0.94"
+tokio = { version = "1.26.0", features = ["full"] }
+tracing = "0.1.37"
+tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+wiki = { git = "https://github.com/fee1-dead/wiki" }
