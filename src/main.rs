@@ -49,7 +49,7 @@ async fn index(
     if session.get::<String>("oauth_key").ok().flatten().is_some() {
         return HttpResponse::Ok().body(INDEX);
     } else if let Some(Auth { code, state }) = q.into_inner().auth {
-        let Some(csrf) = session.remove("csrf") else {
+        let Some(Ok(csrf)) = session.remove_as("csrf") else {
             return HttpResponse::Unauthorized().body("CSRF token not found");
         };
 
@@ -73,7 +73,7 @@ async fn index(
 #[actix_web::get("/login")]
 async fn login(session: Session, data: web::Data<AppState>) -> HttpResponse {
     let (url, csrf) = &data.oauth.authorize_url(CsrfToken::new_random).url();
-    session.insert("csrf", csrf.secret()).unwrap();
+    session.insert("csrf", &*csrf.secret()).unwrap();
 
     HttpResponse::Found()
         .insert_header((header::LOCATION, url.to_string()))
@@ -186,7 +186,8 @@ async fn main() -> color_eyre::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
-    HttpServer::new(|| {
+    let key = Key::generate();
+    HttpServer::new(move || {
         let oauth = BasicClient::new(
             ClientId::new("1b4826105744657830748cb2483bda49".into()),
             Some(ClientSecret::new(include_str!("../token.secret").into())),
@@ -200,7 +201,7 @@ async fn main() -> color_eyre::Result<()> {
             .app_data(Data::new(AppState { oauth }))
             .wrap(SessionMiddleware::new(
                 RedisActorSessionStore::new(constants::REDIS),
-                Key::generate(),
+                key.clone(),
             ))
             .service(index)
             .service(login)
